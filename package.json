@@ -1,0 +1,49 @@
+{
+  "name": "apple-contacts-api",
+  "description": "Apple Contacts API client for Node.js",
+  "version": "0.0.1",
+  "keywords": [
+    "promises",
+    "apple",
+    "contacts",
+    "bluebird"
+  ],
+  "main": "src/AppleContacts.js",
+  "scripts": {
+    "test": "node test/index.js"
+  },
+  "homepage": "https://github.com/controlly/apple-contats-api",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:controlly/apple-contacts-api.git"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Dimitrios C. Michalakos",
+    "email": "dimitris@jmike.gr",
+    "url": "https://github.com/jmike"
+  },
+  "maintainers": [
+    {
+      "name": "tyler46",
+      "email": "mail.doctor46@gmail.com",
+      "url": "https://github.com/tyler46"
+    }
+  ],
+  "dependencies": {
+    "bluebird": "^2.8.2",
+    "is-url": "^1.2.0",
+    "lodash": "^2.4.1",
+    "request": "^2.51.0",
+    "require-directory": "^2.0.0",
+    "type-of": "^2.0.1",
+    "xmlbuilder": "^2.4.6"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "dotenv": "^0.4.0",
+    "mocha": "^2.1.0"
+  },
+  "_npmVersion": "1.4.28",
+  "_nodeVersion": "0.10.35"
+}
