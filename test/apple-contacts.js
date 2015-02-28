@@ -41,4 +41,19 @@ describe('AppleContacts API', function () {
 
   });
 
+  it('successfully fetches user principal', function (done) {
+    // first login, to obtain the required headers.
+    appleContact.login()
+      .then(function (response) {
+      })
+      // fetch user's principal
+      .then(function () {
+        return appleContact.getUserPrincipal();
+      })
+      .then(function (response) {
+        assert.isString(response);
+      })
+      .then(done, done);
+  });
+
 });

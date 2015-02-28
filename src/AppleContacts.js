@@ -2,6 +2,7 @@ var Promise = require('bluebird');
 var request = require('request');
 var type = require('type-of');
 var _ = require('lodash');
+var parse = require('./parser');
 
 
 function AppleContact(props) {
@@ -43,7 +44,7 @@ AppleContact.prototype.login = function (callback) {
     };
 
     request(params, function (err, response, data) {
-      var statusCode = response.statusCode;
+      var statusCode;
 
       if (err) return reject(err);
 
@@ -57,6 +58,45 @@ AppleContact.prototype.login = function (callback) {
         _this._cookies = response.headers['set-cookie'];
 
       resolve(data);
+    });
+  };
+  return new Promise(resolver).nodeify(callback);
+};
+
+
+AppleContact.prototype.getUserPrincipal = function (callback) {
+  var _this = this;
+  var resolver;
+
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'PROPFIND',
+      uri: 'https://contacts.icloud.com',
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/xml; charset=utf-8'
+      },
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      },
+      body: '<d:propfind xmlns:d="DAV:"><d:prop><d:current-user-principal /></d:prop></d:propfind>'
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      resolve(parse(data));
     });
   };
   return new Promise(resolver).nodeify(callback);
