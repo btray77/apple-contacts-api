@@ -45,7 +45,6 @@ describe('AppleContacts API', function () {
     // first login, to obtain the required headers.
     appleContact.login()
       .then(function (response) {
-        console.log('Variables: ' + appleContact._appleId + ', ' + appleContact._password);
       })
       // fetch user's principal
       .then(function () {

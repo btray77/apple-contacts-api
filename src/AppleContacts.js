@@ -43,6 +43,7 @@ AppleContact.prototype.login = function (callback) {
       json: true
     };
 
+    console.log("REQUEST: ", params);
     request(params, function (err, response, data) {
       var statusCode;
 
