@@ -46,6 +46,8 @@ AppleContact.prototype.login = function (callback) {
     request(params, function (err, response, data) {
       var statusCode;
 
+      console.log('error: ', err);
+      console.log('data: ', data);
       if (err) return reject(err);
 
       statusCode = response.statusCode;
