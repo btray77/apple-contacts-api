@@ -41,10 +41,24 @@ describe('AppleContacts API', function () {
 
   });
 
-  it('successfully fetches user principal', function (done) {
+  describe('#getContacts', function () {
+
+    it('throws error when principal argument is invalid', function () {
+      assert.throws(function () { appleContact.getContacts(); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContacts(123); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContacts(true); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContacts(null); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContacts(new Date()); }, /invalid principal argument/i);
+    });
+  });
+
+  it('successfully fetches user contacts', function (done) {
     // first login, to obtain the required headers.
     appleContact.login()
       .then(function (response) {
+        assert.property(response, 'webservices');
+        assert.deepProperty(response, 'webservices.contacts');
+        assert.deepProperty(response, 'webservices.contacts.url');
       })
       // fetch user's principal
       .then(function () {
@@ -52,6 +66,13 @@ describe('AppleContacts API', function () {
       })
       .then(function (response) {
         assert.isString(response);
+        return response.split('/')[1];
+      })
+      .then(function (principal) {
+        return appleContact.getContacts(principal);
+      })
+      .then(function (response) {
+        console.log(response);
       })
       .then(done, done);
   });

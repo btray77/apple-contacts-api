@@ -1,3 +1,4 @@
+var url = require('url');
 var Promise = require('bluebird');
 var request = require('request');
 var type = require('type-of');
@@ -45,6 +46,7 @@ AppleContact.prototype.login = function (callback) {
 
     request(params, function (err, response, data) {
       var statusCode;
+      var uri;
 
       if (err) return reject(err);
 
@@ -56,6 +58,17 @@ AppleContact.prototype.login = function (callback) {
       if (_.has(response.headers, 'set-cookie'))
         // Get response cookies for future use.
         _this._cookies = response.headers['set-cookie'];
+
+      // alternative to pass it from outside..
+      if (!_.isUndefined(data.webservices.contacts.url)) {
+        uri = url.parse(data.webservices.contacts.url);
+        _this._contactsUri = url.format({
+          protocol: uri.protocol,
+          hostname: uri.hostname.replace('ws', '')
+        });
+      } else {
+        _this._contactsUri = 'https://contacts.icloud.com';
+      }
 
       resolve(data);
     });
@@ -73,7 +86,7 @@ AppleContact.prototype.getUserPrincipal = function (callback) {
 
     params = {
       method: 'PROPFIND',
-      uri: 'https://contacts.icloud.com',
+      uri: _this._contactsUri,
       headers: {
         'Origin': _this._origin,
         'Depth': 1,
@@ -99,6 +112,52 @@ AppleContact.prototype.getUserPrincipal = function (callback) {
       resolve(parse(data));
     });
   };
+  return new Promise(resolver).nodeify(callback);
+};
+
+
+AppleContact.prototype.getContacts = function (principal, callback) {
+  var _this = this;
+  var resolver;
+  var uri;
+
+  if (!_.isString(principal)) {
+    throw new Error('Invalid principal argument; expected string, received ' + type(principal));
+  }
+
+  uri = url.resolve(_this._contactsUri, principal + '/carddavhome/card/');
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'PROPFIND',
+      uri: uri,
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/xml; charset=utf-8'
+      },
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      },
+      body: '<d:propfind xmlns:d="DAV:"><d:prop><d:resourcetype/></d:prop></d:propfind>'
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      resolve(data);
+    });
+  };
+
   return new Promise(resolver).nodeify(callback);
 };
 
