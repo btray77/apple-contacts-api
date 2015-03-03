@@ -3,7 +3,7 @@ var Promise = require('bluebird');
 var request = require('request');
 var type = require('type-of');
 var _ = require('lodash');
-var parse = require('./parser');
+var parser = require('./parser');
 
 
 function AppleContact(props) {
@@ -109,7 +109,7 @@ AppleContact.prototype.getUserPrincipal = function (callback) {
         return reject(new Error(data.error_description));
       }
 
-      resolve(parse(data));
+      resolve(parser.parsePrincipal(data));
     });
   };
   return new Promise(resolver).nodeify(callback);
@@ -154,7 +154,7 @@ AppleContact.prototype.getContacts = function (principal, callback) {
         return reject(new Error(data.error_description));
       }
 
-      resolve(data);
+      resolve(parser.parseSingleContactEndpoints(data));
     });
   };
 
