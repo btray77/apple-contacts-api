@@ -64,6 +64,17 @@ describe('AppleContacts API', function () {
     });
   });
 
+  describe('#fetchAllVCards', function () {
+
+    it('throws error when principal argument is invalid', function () {
+      assert.throws(function () { appleContact.fetchAllVCards(); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.fetchAllVCards(123); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.fetchAllVCards(true); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.fetchAllVCards(null); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.fetchAllVCards(new Date()); }, /invalid principal argument/i);
+    });
+  });
+
   it('successfully fetches user contacts', function (done) {
     // first login, to obtain the required headers.
     appleContact.login()
@@ -81,15 +92,14 @@ describe('AppleContacts API', function () {
         return response.split('/')[1];
       })
       .then(function (principal) {
-        return appleContact.getContactEndpoints(principal);
-      })
-      .then(function (vcfCards) {
-        assert.isArray(vcfCards);
-        Promise.map(vcfCards, function (card) {
-          return appleContact.getSingleCard(card);
-        })
-        .then(function (contacts) {
-          console.log('Conacts: ' + contacts);
+        Promise.join(appleContact.getContactEndpoints(principal), appleContact.fetchAllVCards(principal), function (vcfCards, cards) {
+          assert.isArray(vcfCards);
+          Promise.map(vcfCards, function (card) {
+            return appleContact.getSingleCard(card);
+          })
+          .then(function (contacts) {
+            console.log('Contacts: ' + contacts);
+          });
         });
       })
       .then(done, done);

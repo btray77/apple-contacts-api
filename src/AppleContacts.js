@@ -116,6 +116,7 @@ AppleContact.prototype.getUserPrincipal = function (callback) {
 };
 
 
+// TODO: use this method as hook in order to combine next two methods as childs of this one.
 AppleContact.prototype.getContactEndpoints = function (principal, callback) {
   var _this = this;
   var resolver;
@@ -199,6 +200,7 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
         return reject(new Error(data.error_description));
       }
 
+      // TODO: need of one extra level of Contact object.
       resolve(parser.parseVcfCard(data));
     });
   };
@@ -206,5 +208,51 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
   return new Promise(resolver).nodeify(callback);
 };
 
+
+AppleContact.prototype.fetchAllVCards = function(principal, callback) {
+  var _this = this;
+  var resolver;
+  var uri;
+
+  if (!_.isString(principal)) {
+    throw new Error('Invalid principal argument; expected string, received ' + type(principal));
+  }
+
+  uri = url.resolve(_this._contactsUri, principal + '/carddavhome/card/');
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'REPORT',
+      uri: uri,
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/xml; charset=utf-8'
+      },
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      },
+      body: '<c:addressbook-multiget xmlns:d="DAV:" xmlns:c="urn:ietf:params:xml:ns:carddav"><d:prop><c:address-data /></d:prop></c:addressbook-multiget>'
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      // now empty cause not data.
+      resolve(data);
+    });
+  };
+
+  return new Promise(resolver).nodeify(callback);
+};
 
 module.exports = AppleContact;
