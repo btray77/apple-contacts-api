@@ -116,7 +116,7 @@ AppleContact.prototype.getUserPrincipal = function (callback) {
 };
 
 
-AppleContact.prototype.getContacts = function (principal, callback) {
+AppleContact.prototype.getContactEndpoints = function (principal, callback) {
   var _this = this;
   var resolver;
   var uri;
@@ -155,6 +155,51 @@ AppleContact.prototype.getContacts = function (principal, callback) {
       }
 
       resolve(parser.parseSingleContactEndpoints(data));
+    });
+  };
+
+  return new Promise(resolver).nodeify(callback);
+};
+
+
+AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
+  var _this = this;
+  var resolver;
+  var uri;
+
+  if (!_.isString(vcfEndpoint)) {
+    throw new Error('Invalid vcfEndpoint argument; expected string, received ' + type(vcfEndpoint));
+  }
+
+  uri = url.resolve(_this._contactsUri, vcfEndpoint);
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'GET',
+      uri: uri,
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/xml; charset=utf-8'
+      },
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      }
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      resolve(parser.parseVcfCard(data));
     });
   };
 

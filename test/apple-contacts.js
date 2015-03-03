@@ -2,6 +2,7 @@
 require('dotenv').load();
 
 var assert = require('chai').assert;
+var Promise = require('bluebird');
 var AppleContacts = require('../');
 
 
@@ -41,14 +42,25 @@ describe('AppleContacts API', function () {
 
   });
 
-  describe('#getContacts', function () {
+  describe('#getContactEndpoints', function () {
 
     it('throws error when principal argument is invalid', function () {
-      assert.throws(function () { appleContact.getContacts(); }, /invalid principal argument/i);
-      assert.throws(function () { appleContact.getContacts(123); }, /invalid principal argument/i);
-      assert.throws(function () { appleContact.getContacts(true); }, /invalid principal argument/i);
-      assert.throws(function () { appleContact.getContacts(null); }, /invalid principal argument/i);
-      assert.throws(function () { appleContact.getContacts(new Date()); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContactEndpoints(); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContactEndpoints(123); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContactEndpoints(true); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContactEndpoints(null); }, /invalid principal argument/i);
+      assert.throws(function () { appleContact.getContactEndpoints(new Date()); }, /invalid principal argument/i);
+    });
+  });
+
+  describe('#getSingleCard', function () {
+
+    it('throws error when vcfEndpoint argument is invalid', function () {
+      assert.throws(function () { appleContact.getSingleCard(); }, /invalid vcfEndpoint argument/i);
+      assert.throws(function () { appleContact.getSingleCard(123); }, /invalid vcfEndpoint argument/i);
+      assert.throws(function () { appleContact.getSingleCard(true); }, /invalid vcfEndpoint argument/i);
+      assert.throws(function () { appleContact.getSingleCard(null); }, /invalid vcfEndpoint argument/i);
+      assert.throws(function () { appleContact.getSingleCard(new Date()); }, /invalid vcfEndpoint argument/i);
     });
   });
 
@@ -69,10 +81,16 @@ describe('AppleContacts API', function () {
         return response.split('/')[1];
       })
       .then(function (principal) {
-        return appleContact.getContacts(principal);
+        return appleContact.getContactEndpoints(principal);
       })
-      .then(function (response) {
-        console.log(response);
+      .then(function (vcfCards) {
+        assert.isArray(vcfCards);
+        Promise.map(vcfCards, function (card) {
+          return appleContact.getSingleCard(card);
+        })
+        .then(function (contacts) {
+          console.log('Conacts: ' + contacts);
+        });
       })
       .then(done, done);
   });
