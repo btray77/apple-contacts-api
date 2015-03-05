@@ -1,5 +1,6 @@
 var xml2js = require('xml2js');
 var _ = require('lodash');
+var filters = require('./filters');
 var vcardparser = require('vcardparser');
 
 var parser = new xml2js.Parser({explicitArray: false});
@@ -37,10 +38,14 @@ module.exports.parseSingleContactEndpoints = function (xml) {
 
 module.exports.parseVcfCard = function (vcard) {
   var card;
+  var results = {};
   vcardparser.parseString(vcard, function (err, data) {
     if (err) return err;
-    card = data;
-  });
 
+    _.forOwn(filters, function (filter) {
+      filter.visit(results, data);
+    });
+    card = results;
+  });
   return card;
 };

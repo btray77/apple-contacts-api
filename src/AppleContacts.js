@@ -200,7 +200,6 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
         return reject(new Error(data.error_description));
       }
 
-      // TODO: need of one extra level of Contact object.
       resolve(parser.parseVcfCard(data));
     });
   };
