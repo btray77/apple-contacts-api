@@ -1,3 +1,4 @@
+var url = require('url');
 var xml2js = require('xml2js');
 var _ = require('lodash');
 var filters = require('./filters');
@@ -36,7 +37,7 @@ module.exports.parseSingleContactEndpoints = function (xml) {
 };
 
 
-module.exports.parseVcfCard = function (vcard) {
+module.exports.parseVcfCard = function (vcard, headers, uri) {
   var card;
   var results = {};
   vcardparser.parseString(vcard, function (err, data) {
@@ -47,5 +48,7 @@ module.exports.parseVcfCard = function (vcard) {
     });
     card = results;
   });
+  card.etag = headers.etag;
+  card.href = url.parse(uri).pathname;
   return card;
 };
