@@ -200,7 +200,7 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
         return reject(new Error(data.error_description));
       }
 
-      resolve(parser.parseVcfCard(data));
+      resolve(parser.parseVcfCard(data, response.headers, uri));
     });
   };
 
@@ -253,5 +253,120 @@ AppleContact.prototype.fetchAllVCards = function(principal, callback) {
 
   return new Promise(resolver).nodeify(callback);
 };
+
+
+AppleContact.prototype.deleteContact = function (href, etag, callback) {
+  var _this = this;
+  var resolver;
+  var uri;
+
+  if (!_.isString(href)) {
+    throw new Error('Invalid href argument; expected string, received ' + type(href));
+  }
+
+  // handle optional etag argument
+  if (_.isFunction(etag)) {
+    callback = etag;
+    etag = '*';
+  } else if (_.isUndefined(etag)) {
+    etag = '*';
+  }
+
+  if (!_.isString(etag)) {
+    throw new Error('Invalid etag argument; expected string, received ' + type(etag));
+  }
+
+  uri = url.resolve(_this._contactsUri, href);
+
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'DELETE',
+      uri: uri,
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/vcard; charset=utf-8',
+        'If-match': etag
+
+      },
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      }
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      resolve();
+    });
+  };
+
+  return new Promise(resolver).nodeify(callback);
+};
+
+
+AppleContact.prototype.createContact = function (principal, data, callback) {
+  var _this = this;
+  var resolver;
+  var uri;
+
+  if (!_.isString(principal)) {
+    throw new Error('Invalid principal argument; expected string, received ' + type(principal));
+  }
+
+  if (!_.isObject(data)) {
+    throw new Error('Invalid data argument; expected string, received ' + type(data));
+  }
+
+  uri = url.resolve(_this._contactsUri, principal, '/carddavhome/card/newvcard.vcf');
+
+  resolver = function (resolve, reject) {
+    var params;
+
+    params = {
+      method: 'PUT',
+      uri: uri,
+      headers: {
+        'Origin': _this._origin,
+        'Depth': 1,
+        'Content-Type': 'text/vcard; charset=utf-8',
+        'If-match': '*'
+
+      },
+      // pass it as stringified vcard.
+      body: data,
+      auth: {
+        'user': _this._appleId,
+        'pass': _this._password
+      }
+    };
+
+    request(params, function (err, response, data) {
+      var statusCode;
+
+      if (err) return reject(err);
+
+      statusCode = response.statusCode;
+      if (statusCode >= 400 || data.error_description) {
+        return reject(new Error(data.error_description));
+      }
+
+      resolve(data);
+    });
+  };
+
+  return new Promise(resolver).nodeify(callback);
+};
+
 
 module.exports = AppleContact;

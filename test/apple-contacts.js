@@ -75,6 +75,25 @@ describe('AppleContacts API', function () {
     });
   });
 
+  describe('#deleteContact', function () {
+
+    it('throws error when href argument is invalid', function () {
+      assert.throws(function () { appleContact.deleteContact(); }, /invalid href argument/i);
+      assert.throws(function () { appleContact.deleteContact(123); }, /invalid href argument/i);
+      assert.throws(function () { appleContact.deleteContact(true); }, /invalid href argument/i);
+      assert.throws(function () { appleContact.deleteContact(null); }, /invalid href argument/i);
+      assert.throws(function () { appleContact.deleteContact(new Date()); }, /invalid href argument/i);
+    });
+
+    it('throws error when etag is invalid', function () {
+      assert.throws(function () { appleContact.deleteContact('contactId', 123); }, /invalid etag argument/i);
+      assert.throws(function () { appleContact.deleteContact('contactId', true); }, /invalid etag argument/i);
+      assert.throws(function () { appleContact.deleteContact('contactId', null); }, /invalid etag argument/i);
+      assert.throws(function () { appleContact.deleteContact('contactId', new Date()); }, /invalid etag argument/i);
+    });
+  });
+
+
   it('successfully fetches user contacts', function (done) {
     // first login, to obtain the required headers.
     appleContact.login()
@@ -104,5 +123,14 @@ describe('AppleContacts API', function () {
       })
       .then(done, done);
   });
-
 });
+            // It works but leave it out, not to delete all remaining contacts
+//          return [contacts[0].href, contacts[0].etag];
+//        })
+//        .spread(function(href, etag) {
+//          return appleContact.deleteContact(href, etag)
+//            .then(function (response) {
+//              assert.isUndefined(response);
+//            })
+//            .return();
+//        });
