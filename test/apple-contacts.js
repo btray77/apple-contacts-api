@@ -3,8 +3,11 @@ require('dotenv').load();
 
 var assert = require('chai').assert;
 var Promise = require('bluebird');
+var uuid = require('node-uuid');
 var AppleContacts = require('../');
 
+var obj = {version: '3.0', fn: {name: 'Spyros Markopoulos'}, n: {givens: ['Spyros'], families: ['Markopoulos']}, uid: {params: {type: 'uuid'}, id: uuid.v4()}};
+var f;
 
 describe('AppleContacts API', function () {
 
@@ -111,6 +114,7 @@ describe('AppleContacts API', function () {
         return response.split('/')[1];
       })
       .then(function (principal) {
+        f = principal;
         Promise.join(appleContact.getContactEndpoints(principal), appleContact.fetchAllVCards(principal), function (vcfCards, cards) {
           assert.isArray(vcfCards);
           Promise.map(vcfCards, function (card) {
@@ -121,6 +125,13 @@ describe('AppleContacts API', function () {
           });
         });
       })
+//    .then(function() {
+//      console.log('principal: ', f);
+//      return appleContact.createContact(f, obj);
+//    })
+//    .then(function (response) {
+//      console.log('Create response: ', response);
+//    })
       .then(done, done);
   });
 });

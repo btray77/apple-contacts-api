@@ -3,7 +3,9 @@ var Promise = require('bluebird');
 var request = require('request');
 var type = require('type-of');
 var _ = require('lodash');
+var uuid = require('node-uuid');
 var parser = require('./parser');
+var vcard = require('./vCard');
 
 
 function AppleContact(props) {
@@ -200,7 +202,11 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
         return reject(new Error(data.error_description));
       }
 
-      resolve(parser.parseVcfCard(data, response.headers, uri));
+      var parsedCard = parser.parseVcfCard(data, response.headers, uri);
+      console.log('RAW VCARD: ', parsedCard);
+      resolve(parsedCard);
+
+//    resolve(parser.parseVcfCard(data, response.headers, uri));
     });
   };
 
@@ -328,7 +334,8 @@ AppleContact.prototype.createContact = function (principal, data, callback) {
     throw new Error('Invalid data argument; expected string, received ' + type(data));
   }
 
-  uri = url.resolve(_this._contactsUri, principal, '/carddavhome/card/newvcard.vcf');
+  // pass a time based uuid, since we want to be unique every time.
+  uri = url.resolve(_this._contactsUri, principal + '/carddavhome/card/' + uui.v1() + '.vcf');
 
   resolver = function (resolve, reject) {
     var params;
@@ -340,19 +347,22 @@ AppleContact.prototype.createContact = function (principal, data, callback) {
         'Origin': _this._origin,
         'Depth': 1,
         'Content-Type': 'text/vcard; charset=utf-8',
-        'If-match': '*'
+        'If-match': ''
 
       },
       // pass it as stringified vcard.
-      body: data,
+      body: vcard.generate(data),
       auth: {
         'user': _this._appleId,
         'pass': _this._password
       }
     };
 
+    console.log(params);
+
     request(params, function (err, response, data) {
       var statusCode;
+      console.log('data: ', data);
 
       if (err) return reject(err);
 
