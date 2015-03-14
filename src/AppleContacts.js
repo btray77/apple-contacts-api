@@ -5,7 +5,6 @@ var type = require('type-of');
 var _ = require('lodash');
 var uuid = require('node-uuid');
 var parser = require('./parser');
-var vcard = require('./vCard');
 
 
 function AppleContact(props) {
@@ -202,11 +201,7 @@ AppleContact.prototype.getSingleCard = function (vcfEndpoint, callback) {
         return reject(new Error(data.error_description));
       }
 
-      var parsedCard = parser.parseVcfCard(data, response.headers, uri);
-      console.log('RAW VCARD: ', parsedCard);
-      resolve(parsedCard);
-
-//    resolve(parser.parseVcfCard(data, response.headers, uri));
+      resolve(parser.parseVcfCard(data, response.headers, uri));
     });
   };
 
@@ -351,7 +346,8 @@ AppleContact.prototype.createContact = function (principal, data, callback) {
 
       },
       // pass it as stringified vcard.
-      body: vcard.generate(data),
+      body: data,
+//    body: vcard.generate(data),
       auth: {
         'user': _this._appleId,
         'pass': _this._password
